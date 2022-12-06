@@ -52,9 +52,7 @@ class FashionClassificationDataModule(pl.LightningDataModule):
         self.augmentations = [
             RandomHorizontalFlip(0.5),
             RandomRotation(30),
-            ColorJitter(brightness=.5, hue=.3),
             GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5)),
-            RandomGrayscale()
         ]
         self.train_transforms = Compose([
             Resize((256, 256)),
@@ -66,7 +64,7 @@ class FashionClassificationDataModule(pl.LightningDataModule):
         self.master_dict = master_dict
         self.sub_dict = sub_dict
         self.color_dict = color_dict
-        self.transforms = Compose([Resize((256, 256)), ToTensor(), Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        self.transforms = Compose([Resize((232, 232)), ToTensor(), Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
         self.train_batch = hparams['batch_size']
         self.val_batch = self.train_batch * 4
 
