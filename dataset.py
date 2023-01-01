@@ -55,7 +55,7 @@ class FashionClassificationDataModule(pl.LightningDataModule):
             GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5)),
         ]
         self.train_transforms = Compose([
-            Resize((256, 256)),
+            Resize((232, 232)),
             RandomApply(self.augmentations, p=0.6),
             ToTensor(),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -103,6 +103,10 @@ def test_fashion_dataset():
   'Nude': 24, 'Off White': 25, 'Olive': 26, 'Orange': 27, 'Peach': 28, 'Pink': 29, 'Purple': 30, 'Red': 31, 'Rose': 32,
   'Rust': 33, 'Sea Green': 34, 'Silver': 35, 'Skin': 36, 'Steel': 37, 'Tan': 38, 'Taupe': 39, 'Teal': 40, 'Turquoise Blue': 41,
  'White': 42, 'Yellow': 43}
+    print(gender_dict.keys())
+    print(sub_dict.keys())
+    print(color_dict.keys())
+    print(master_dict.keys())
     full_data = pd.read_csv('data/fashion-dataset/final-styles_df.csv')
     sample_module = FashionClassificationDataModule(hparams, gender_dict, master_dict, sub_dict, color_dict, full_data)
     sample_module.setup()

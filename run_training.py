@@ -16,7 +16,7 @@ def get_data(path):
 def train_model(train_module, data_module):
     checkpoint_callback = ModelCheckpoint(filename='{epoch}-{val-total-loss:.3f}-{val-total-acc:.3f}-{total-f1score:.3f}'
                                           , save_top_k=2, monitor='total-f1score', mode='max', save_last=False)
-    wandb_logger = WandbLogger(project="fashion_classification", save_dir='lightning_logs', name='first_run_64batch')
+    wandb_logger = WandbLogger(project="fashion_classification", save_dir='lightning_logs', name='resnet152_run_64batch')
     early_stopping = EarlyStopping(monitor="total-f1score", patience=5, verbose=False, mode="max")
     # trainer = pl.Trainer(accelerator='gpu', fast_dev_run=2, max_epochs=5,
     #                      callbacks=[checkpoint_callback, early_stopping], precision=16)
@@ -28,7 +28,7 @@ def train_model(train_module, data_module):
 def test_training():
     pl.seed_everything(15798)
     hparams = {'path': 'data/fashion-dataset/images/', 'batch_size': 64, 'gender_classes': 5, 'mastercat_classes': 4,
-               'subcat_classes': 32, 'color_classes': 44, 'resnet_type': 'resnet101', 'layer1': 2048, 'layer2': 1024,
+               'subcat_classes': 32, 'color_classes': 44, 'resnet_type': 'resnet152', 'layer1': 2048, 'layer2': 1024,
                'layer3': 256, 'activation': 'ReLU', 'dropout_val': 0.3, 'lr': 1e-4}
 
     gender_dict = {'Boys': 0, 'Girls': 1, 'Men': 2, 'Unisex': 3, 'Women': 4}

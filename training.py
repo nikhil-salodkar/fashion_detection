@@ -1,4 +1,5 @@
 import torch
+import wandb
 from torch import nn
 
 import pytorch_lightning as pl
@@ -12,16 +13,32 @@ class FashionPrediction(pl.LightningModule):
         self.save_hyperparameters()
         self.feature_model = FashionResnet(self.hparams['hparams'])
         self.classification_model = FashionClassifictions(self.hparams['hparams'])
-        self.acc = Accuracy()
+        self.gender_acc = Accuracy(task='multiclass', num_classes=self.hparams['hparams']['gender_classes'])
+        self.master_acc = Accuracy(task='multiclass', num_classes=self.hparams['hparams']['mastercat_classes'])
+        self.subcat_acc = Accuracy(task='multiclass', num_classes=self.hparams['hparams']['subcat_classes'])
+        self.color_acc = Accuracy(task='multiclass', num_classes=self.hparams['hparams']['color_classes'])
         self.criterion = nn.CrossEntropyLoss()
-        self.gender_f1 = F1Score(self.hparams['hparams']['gender_classes'], average='macro', mdmc_average='global')
-        self.mastercat_f1 = F1Score(self.hparams['hparams']['mastercat_classes'], average='macro', mdmc_average='global')
-        self.subcat_f1 = F1Score(self.hparams['hparams']['subcat_classes'], average='macro', mdmc_average='global')
-        self.color_f1 = F1Score(self.hparams['hparams']['color_classes'], average='macro', mdmc_average='global')
-        self.gender_confusion = ConfusionMatrix(self.hparams['hparams']['gender_classes'])
-        self.mastercat_confusion = ConfusionMatrix(self.hparams['hparams']['mastercat_classes'])
-        self.subcat_confusion = ConfusionMatrix(self.hparams['hparams']['subcat_classes'])
-        self.color_confusion = ConfusionMatrix(self.hparams['hparams']['color_classes'])
+        self.gender_f1 = F1Score(task='multiclass', num_classes=self.hparams['hparams']['gender_classes'], average='macro')
+        self.mastercat_f1 = F1Score(task='multiclass', num_classes=self.hparams['hparams']['mastercat_classes'], average='macro')
+        self.subcat_f1 = F1Score(task='multiclass', num_classes=self.hparams['hparams']['subcat_classes'], average='macro')
+        self.color_f1 = F1Score(task='multiclass', num_classes=self.hparams['hparams']['color_classes'], average='macro')
+        self.gender_confusion = ConfusionMatrix(task='multiclass', num_classes=self.hparams['hparams']['gender_classes'])
+        self.mastercat_confusion = ConfusionMatrix(task='multiclass', num_classes=self.hparams['hparams']['mastercat_classes'])
+        self.subcat_confusion = ConfusionMatrix(task='multiclass', num_classes=self.hparams['hparams']['subcat_classes'])
+        self.color_confusion = ConfusionMatrix(task='multiclass', num_classes=self.hparams['hparams']['color_classes'])
+        self.gender_label = ['Boys', 'Girls', 'Men', 'Unisex', 'Women']
+        self.master_label = ['Accessories', 'Apparel', 'Footwear', 'Personal Care']
+        self.subcat_label = ['Accessories', 'Apparel Set', 'Bags', 'Belts', 'Bottomwear', 'Cufflinks', 'Dress', 'Eyes',
+                             'Eyewear', 'Flip Flops', 'Fragrance', 'Headwear', 'Innerwear', 'Jewellery', 'Lips',
+                             'Loungewear and Nightwear', 'Makeup', 'Mufflers', 'Nails', 'Sandal', 'Saree', 'Scarves',
+                             'Shoe Accessories', 'Shoes', 'Skin', 'Skin Care', 'Socks', 'Stoles', 'Ties', 'Topwear',
+                             'Wallets', 'Watches']
+        self.color_label = ['Beige', 'Black', 'Blue', 'Bronze', 'Brown', 'Burgundy', 'Charcoal', 'Coffee Brown',
+                            'Copper', 'Cream', 'Gold', 'Green', 'Grey', 'Grey Melange', 'Khaki', 'Lavender', 'Magenta',
+                            'Maroon', 'Mauve', 'Metallic', 'Multi', 'Mushroom Brown', 'Mustard', 'Navy Blue', 'Nude',
+                            'Off White', 'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Rust',
+                            'Sea Green', 'Silver', 'Skin', 'Steel', 'Tan', 'Taupe', 'Teal', 'Turquoise Blue',
+                            'White', 'Yellow']
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, image, transforms):
@@ -48,10 +65,10 @@ class FashionPrediction(pl.LightningModule):
         sub_predict = torch.argmax(sub_logits, dim=1)
         color_predict = torch.argmax(color_logits, dim=1)
 
-        gender_acc = self.acc(gender_predict, gender_targets)
-        master_acc = self.acc(master_predict, master_targets)
-        sub_acc = self.acc(sub_predict, sub_targets)
-        color_acc = self.acc(color_predict, color_targets)
+        gender_acc = self.gender_acc(gender_predict, gender_targets)
+        master_acc = self.master_acc(master_predict, master_targets)
+        sub_acc = self.subcat_acc(sub_predict, sub_targets)
+        color_acc = self.color_acc(color_predict, color_targets)
 
         total_acc = (gender_acc + master_acc + sub_acc + color_acc) / 4
 
@@ -84,10 +101,10 @@ class FashionPrediction(pl.LightningModule):
         sub_predict = torch.argmax(sub_logits, dim=1)
         color_predict = torch.argmax(color_logits, dim=1)
 
-        gender_acc = self.acc(gender_predict, gender_targets)
-        master_acc = self.acc(master_predict, master_targets)
-        sub_acc = self.acc(sub_predict, sub_targets)
-        color_acc = self.acc(color_predict, color_targets)
+        gender_acc = self.gender_acc(gender_predict, gender_targets)
+        master_acc = self.master_acc(master_predict, master_targets)
+        sub_acc = self.subcat_acc(sub_predict, sub_targets)
+        color_acc = self.color_acc(color_predict, color_targets)
 
         total_acc = (gender_acc + master_acc + sub_acc + color_acc) / 4
 
@@ -164,10 +181,10 @@ class FashionPrediction(pl.LightningModule):
             'color-f1score': color_f1_score, 'total-f1score': total_f1_score
         })
 
-        print("gender_confusion_metric: ", gender_confusion_metric)
-        print("master_confusion_metric: ", master_confusion_metric)
-        print("sub_confusion_metric: ", sub_confusion_metric)
-        print("color_confusion_metric: ", color_confusion_metric)
+        print("gender_confusion_metric: \n", gender_confusion_metric)
+        print("master_confusion_metric: \n", master_confusion_metric)
+        print("sub_confusion_metric: \n", sub_confusion_metric)
+        print("color_confusion_metric: \n", color_confusion_metric)
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams['hparams']['lr'])

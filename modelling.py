@@ -7,6 +7,8 @@ from torchvision.models import ResNet101_Weights, ResNet50_Weights, ResNet152_We
 class FashionResnet(nn.Module):
     def __init__(self, hparams):
         super().__init__()
+        if hparams['resnet_type'] == 'resnet152':
+            self.model = torchvision.models.resnet152(weights=ResNet152_Weights.DEFAULT)
         if hparams['resnet_type'] == 'resnet101':
             self.model = torchvision.models.resnet101(weights=ResNet101_Weights.DEFAULT)
         elif hparams['resnet_type'] == 'resnet50':
@@ -67,10 +69,10 @@ class FashionClassifictions(nn.Module):
 
 def test_modelling():
     hparams = {'path': 'data/fashion-dataset/images/', 'batch_size': 64, 'gender_classes': 5, 'mastercat_classes': 4,
-               'subcat_classes': 32, 'color_classes': 44, 'resnet_type': 'resnet101', 'layer1': 2048, 'layer2': 1024,
+               'subcat_classes': 32, 'color_classes': 44, 'resnet_type': 'resnet152', 'layer1': 2048, 'layer2': 1024,
                'layer3': 256, 'activation': 'ReLU', 'dropout_val': 0.3}
     sample_resnet = FashionResnet(hparams)
-    sample_data = torch.randn((16, 3, 256, 256))
+    sample_data = torch.randn((16, 3, 232, 232))
     print(sample_data.shape)
     out = sample_resnet(sample_data)
     print("The output shape is :", out.shape)
