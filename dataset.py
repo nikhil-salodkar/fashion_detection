@@ -8,11 +8,14 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
 
 import pytorch_lightning as pl
-from torchvision.transforms import RandomHorizontalFlip, RandomRotation, ColorJitter, GaussianBlur, RandomGrayscale, \
+from torchvision.transforms import RandomHorizontalFlip, RandomRotation, GaussianBlur, \
     Compose, Resize, RandomApply, ToTensor, Normalize
 
 
 class FashionDataset(Dataset):
+    """
+    Class to facilitate generation of individual data samples for training and validation.
+    """
     def __init__(self, data, transforms, gender_dict, master_dict, sub_dict, color_dict, path='data/fashion-dataset/images'):
         self.data = data
         self.transforms = transforms
@@ -45,6 +48,10 @@ class FashionDataset(Dataset):
 
 
 class FashionClassificationDataModule(pl.LightningDataModule):
+    """
+    Class to dictate how to create data train and validation batches for
+    training and assign data augmentation strategy.
+    """
     def __init__(self, hparams, gender_dict, master_dict, sub_dict, color_dict, full_data):
         super().__init__()
         self.path = hparams['path']

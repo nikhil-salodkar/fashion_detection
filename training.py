@@ -1,5 +1,4 @@
 import torch
-import wandb
 from torch import nn
 
 import pytorch_lightning as pl
@@ -8,8 +7,17 @@ from modelling import FashionResnet, FashionClassifictions
 
 
 class FashionPrediction(pl.LightningModule):
-    def __init__(self, hparams):
+    """
+    Class to facilitate how training will happen
+
+    Attrubutes:
+    hparams (dict) : The hyper parameters.
+    master_weights, subcat_weights, color_weights, gender_weights (tensor): loss weightage for the attributes for
+    training only
+    """
+    def __init__(self, hparams, master_weights, subcat_weights, color_weights, gender_weights):
         super().__init__()
+        torch.set_printoptions(profile='full', linewidth=400)
         self.save_hyperparameters()
         self.feature_model = FashionResnet(self.hparams['hparams'])
         self.classification_model = FashionClassifictions(self.hparams['hparams'])
@@ -17,7 +25,6 @@ class FashionPrediction(pl.LightningModule):
         self.master_acc = Accuracy(task='multiclass', num_classes=self.hparams['hparams']['mastercat_classes'])
         self.subcat_acc = Accuracy(task='multiclass', num_classes=self.hparams['hparams']['subcat_classes'])
         self.color_acc = Accuracy(task='multiclass', num_classes=self.hparams['hparams']['color_classes'])
-        self.criterion = nn.CrossEntropyLoss()
         self.gender_f1 = F1Score(task='multiclass', num_classes=self.hparams['hparams']['gender_classes'], average='macro')
         self.mastercat_f1 = F1Score(task='multiclass', num_classes=self.hparams['hparams']['mastercat_classes'], average='macro')
         self.subcat_f1 = F1Score(task='multiclass', num_classes=self.hparams['hparams']['subcat_classes'], average='macro')
@@ -39,7 +46,15 @@ class FashionPrediction(pl.LightningModule):
                             'Off White', 'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Rust',
                             'Sea Green', 'Silver', 'Skin', 'Steel', 'Tan', 'Taupe', 'Teal', 'Turquoise Blue',
                             'White', 'Yellow']
-        self.softmax = nn.Softmax(dim=1)
+        self.color_weights = torch.tensor(self.hparams['color_weights'])
+        self.master_weights = torch.tensor(self.hparams['master_weights'])
+        self.subcat_weights = torch.tensor(self.hparams['subcat_weights'])
+        self.gender_weights = torch.tensor(self.hparams['gender_weights'])
+        self.master_criterion = nn.CrossEntropyLoss(weight=self.master_weights)
+        self.subcat_criterion = nn.CrossEntropyLoss(weight=self.subcat_weights)
+        self.gender_criterion = nn.CrossEntropyLoss(weight=self.gender_weights)
+        self.color_criterion = nn.CrossEntropyLoss(weight=self.color_weights)
+
 
     def forward(self, image, transforms):
         pass
@@ -53,10 +68,10 @@ class FashionPrediction(pl.LightningModule):
 
         features = self.feature_model(image_tensors)
         gender_logits, master_logits, sub_logits, color_logits = self.classification_model(features)
-        gender_loss = self.criterion(gender_logits, gender_targets)
-        master_loss = self.criterion(master_logits, master_targets)
-        sub_loss = self.criterion(sub_logits, sub_targets)
-        color_loss = self.criterion(color_logits, color_targets)
+        gender_loss = self.gender_criterion(gender_logits, gender_targets)
+        master_loss = self.master_criterion(master_logits, master_targets)
+        sub_loss = self.subcat_criterion(sub_logits, sub_targets)
+        color_loss = self.color_criterion(color_logits, color_targets)
 
         total_loss = gender_loss + master_loss + sub_loss + color_loss
 
@@ -89,10 +104,10 @@ class FashionPrediction(pl.LightningModule):
 
         features = self.feature_model(image_tensors)
         gender_logits, master_logits, sub_logits, color_logits = self.classification_model(features)
-        gender_loss = self.criterion(gender_logits, gender_targets)
-        master_loss = self.criterion(master_logits, master_targets)
-        sub_loss = self.criterion(sub_logits, sub_targets)
-        color_loss = self.criterion(color_logits, color_targets)
+        gender_loss = self.gender_criterion(gender_logits, gender_targets)
+        master_loss = self.master_criterion(master_logits, master_targets)
+        sub_loss = self.subcat_criterion(sub_logits, sub_targets)
+        color_loss = self.color_criterion(color_logits, color_targets)
 
         total_loss = gender_loss + master_loss + sub_loss + color_loss
 

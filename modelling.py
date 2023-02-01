@@ -5,6 +5,7 @@ from torchvision.models import ResNet101_Weights, ResNet50_Weights, ResNet152_We
 
 
 class FashionResnet(nn.Module):
+    """Class for modelling a ResNet architecture Convolutional model with appropritate pretrained weights"""
     def __init__(self, hparams):
         super().__init__()
         if hparams['resnet_type'] == 'resnet152':
@@ -23,6 +24,8 @@ class FashionResnet(nn.Module):
 
 
 class FashionClassifictions(nn.Module):
+    """Class for modelling linear layers for classification of Master category, Sub category, gender preference,
+      Product color"""
     def __init__(self, hparams):
         super().__init__()
         self.gender_linear1 = nn.Linear(hparams['layer1'], hparams['layer2'])
@@ -38,13 +41,14 @@ class FashionClassifictions(nn.Module):
         self.subcat_out = nn.Linear(hparams['layer3'], hparams['subcat_classes'])
 
         self.color_linear1 = nn.Linear(hparams['layer1'], hparams['layer2'])
-        self.color_linear2 = nn.Linear(hparams['layer2'], hparams['layer3'])
+        self.color_linear2 = nn.Linear(hparams['layer2'], 512)
+        self.color_linear3 = nn.Linear(512, hparams['layer3'])
         self.color_out = nn.Linear(hparams['layer3'], hparams['color_classes'])
 
         if hparams['activation'] == 'ReLU':
             self.activation = nn.ReLU()
         elif hparams['activation'] == 'gelu':
-            self['activation'] = nn.GELU()
+            self.activation = nn.GELU()
         self.dropout = nn.Dropout(hparams['dropout_val'])
 
     def forward(self, out):
@@ -62,6 +66,7 @@ class FashionClassifictions(nn.Module):
 
         color_out = self.activation(self.dropout((self.color_linear1(out))))
         color_out = self.activation(self.dropout(self.color_linear2(color_out)))
+        color_out = self.activation(self.dropout(self.color_linear3(color_out)))
         color_out = self.color_out(color_out)
 
         return gender_out, master_out, subcat_out, color_out
