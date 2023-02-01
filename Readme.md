@@ -45,6 +45,9 @@ extracted.
 extracted from ResNet are used to generate an index of existing product embeddings, which
 can be searched for visual similarity given a new image embeddings as input.
 
+The code to generate indexes using Faiss library can be found in the huggingface
+demo code.
+
 ## Evaluation
 Evaluation metrics can be visualized in weights and biases link [here](https://wandb.ai/nikhilsalodkar/fashion_classification?workspace=user-nikhilsalodkar).
 As can be observed the model is especially struggling to get high F1 score for color
