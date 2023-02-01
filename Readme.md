@@ -32,6 +32,8 @@ display name which can be used for more experiments but not used in current work
 
 The hierarchy of subcategories and article type may be not strict and further processing
 of data will be required if hierarchical classification is to be designed.
+
+Some data cleaning and processing can be found in the jupyter notebook.
 ## Modelling
 Information about model architecture used can be found in modelling.py
 
